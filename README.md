@@ -1,51 +1,46 @@
-# IPS SALUMED — Agenda de citas
+# IPS SALUMED — Agenda institucional real
 
-Aplicación estática para Cloudflare Pages conectada a Supabase. Incluye acceso de personal autorizado, pacientes, citas, edición, cancelación y consulta de recordatorios programados.
+Aplicación para gestionar pacientes, citas odontológicas y recordatorios, alojable en Cloudflare Pages y conectada al proyecto Supabase `kncjxucxenjvrjjtunfk`.
 
-## Paso previo: configurar la clave pública de Supabase
+## Estado de seguridad y acceso
 
-La URL del proyecto Supabase está configurada en `index.html`, pero la clave pública se dejó como `PON_AQUI_TU_CLAVE_PUBLICABLE` para no transferir credenciales mediante esta integración. **Antes de usar la web**, en Supabase Dashboard > Project Settings > API Keys, copia la clave de tipo *Publishable* del proyecto `kncjxucxenjvrjjtunfk`. En GitHub abre `index.html`, pulsa Edit (lápiz), sustituye exactamente `PON_AQUI_TU_CLAVE_PUBLICABLE` por la clave `sb_publishable_...` y confirma el cambio en la rama `main`. La clave *publishable* puede estar en el frontend; **nunca uses `service_role`, `sb_secret_` ni tokens de WhatsApp**.
+- Se **eliminó** el archivo `demo.html` y la autenticación ficticia `admin/admin`.
+- El formulario inicial usa autenticación real de Supabase Auth.
+- El frontend tiene la **clave de tipo publishable** de Supabase; no contiene ninguna clave `service_role`, `sb_secret_` ni tokens de WhatsApp.
+- Las tablas `patients`, `appointments`, `staff` y `reminder_jobs` tienen RLS.
+- El correo **promocionymantenimiento@ipssalumed.com** está preautorizado en la lista privada de la base de datos para recibir rol **admin** tras confirmar el correo en Supabase Auth.
+- **La cuenta aún no se ha creado ni activado** hasta que el titular defina su propia contraseña y confirme el email. No se ha generado ni enviado una invitación desde la integración.
 
-## Publicar en Cloudflare Pages
+## Activar el primer administrador
 
-1. Cloudflare Dashboard > Workers & Pages > Create > Pages > Connect to Git.
-2. Autoriza GitHub y selecciona `alvaroyepezhumanez-blip/Ipssalumed`, rama `main`.
-3. Framework preset: `None`. Build command: sin comando. Build output directory: `/` (raíz del repositorio).
-4. Publica y comprueba que aparezca la pantalla de acceso.
-5. Opcional: configura dominio `agenda.ipssalumed.com` y URL permitida en Supabase Authentication.
+1. Abre el sitio de Cloudflare Pages conectado a este repositorio (rama `main`).
+2. En el formulario, deja el correo `promocionymantenimiento@ipssalumed.com`.
+3. Escribe una **contraseña nueva y privada**, de al menos 12 caracteres con mayúsculas, minúsculas y números.
+4. Selecciona **Activar cuenta por primera vez**.
+5. Revisa el buzón institucional, confirma mediante el enlace recibido y vuelve a iniciar sesión.
+6. Una función de base de datos añade a `public.staff` el usuario verificado preautorizado con rol `admin`. Si el correo ya existía y está verificado, el administrador puede validar la fila en la tabla `staff`.
 
-Cloudflare desplegará automáticamente nuevos commits a `main`.
+### Configurar redirección de verificación
 
-## Modo de demostración (solo datos ficticios)
+**Antes del paso 4**, en [Supabase Auth URL Configuration](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/url-configuration), configura la URL real asignada por Cloudflare Pages como **Site URL** y agrégala a **Redirect URLs**. Por ejemplo, `https://TU-PROYECTO.pages.dev/**` (reemplaza por la dirección real; no uses este ejemplo como URL). En [Auth Providers](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/providers) asegúrate de tener activada **Confirm email**. Nunca desactives la confirmación del correo para usuarios con acceso a datos de pacientes.
 
-La pantalla principal ofrece una prueba con:
+Para cuentas futuras, la aprobación de correos se gestiona mediante `private.staff_email_allowlist`; no concedas acceso mediante credenciales compartidas.
 
-- **Usuario:** `admin`
-- **Contraseña:** `admin`
+## Publicar con Cloudflare Pages desde GitHub
 
-Al ingresar estas credenciales se abre `/demo.html`, una aplicación completamente aislada, sin conexión con Supabase y sin envío de WhatsApp. Permite crear, editar, buscar y cancelar citas y pacientes de ejemplo, así como ver el estado simulado de recordatorios. Los cambios solo se almacenan en la sesión de la pestaña del navegador; no se deben introducir datos de pacientes reales.
+1. En Cloudflare Dashboard > Workers & Pages > Pages conecta GitHub con el repositorio `alvaroyepezhumanez-blip/Ipssalumed`.
+2. Producción: rama `main`. Preset: `None`. Build command: vacío. Directorio de salida: `/`.
+3. Comprueba la dirección `pages.dev` real en Cloudflare. Los cambios futuros en `main` activarán despliegues automáticos si la integración está operativa.
 
-**Estos valores NO son credenciales administrativas de Supabase**, y nunca conceden acceso a datos institucionales. Para operar con pacientes reales, crear usuarios en Supabase Auth con contraseñas robustas y autorizar explícitamente su UID en `public.staff`.
+## Funciones
 
-## Habilitar acceso de personal
+- Registrar, consultar y editar pacientes.
+- Programar, buscar, editar, reprogramar y cancelar citas.
+- Desactivar recordatorios sin cancelar citas.
+- Consultar el estado de recordatorios programados.
 
-En Supabase Dashboard > Authentication > Users crea o invita al primer usuario. Luego ejecuta desde SQL Editor, reemplazando el UUID por el identificador real:
+**Recordatorios de WhatsApp:** solo se programan en Supabase. **No se envían mensajes reales** hasta instalar un procesador privado y conectar la API oficial, con plantilla aprobada, secretos protegidos y controles de consentimiento.
 
-```sql
-insert into public.staff(user_id,display_name,role)
-values ('UUID_REAL','Administrador IPS SALUMED','admin');
-```
+## Antes de introducir datos reales
 
-Los usuarios autenticados sin registro activo en `staff` no pueden entrar a la agenda. Las tablas cuentan con RLS. No introduzcas datos reales hasta realizar pruebas de acceso, copia de seguridad, auditoría y cumplimiento de protección de datos.
-
-## Recordatorios WhatsApp
-
-La base de datos programa avisos a 24 h y 2 h de la cita si hay autorización del paciente. **Los mensajes aún NO se envían**: falta incorporar una integración de servidor con WhatsApp Business Platform, plantilla aprobada, programador, gestión de reintentos y webhook de confirmación. No publiques información clínica en los mensajes.
-
-## Archivos
-
-- `index.html`: interfaz y llamadas a Supabase.
-- `_headers`: cabeceras defensivas de Cloudflare.
-- `README.md`: esta guía.
-
-> Nota: El repositorio es público; los datos de pacientes permanecen exclusivamente en Supabase, no en GitHub.
+Verifica accesos, contraseñas, HTTPS, respaldos, auditoría, funcionamiento en Cloudflare, protección de datos personales en Colombia y que cada profesional solo vea la información necesaria. Nunca uses datos de pacientes para pruebas públicas.
