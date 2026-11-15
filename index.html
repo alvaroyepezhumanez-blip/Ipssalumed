@@ -10,6 +10,7 @@
 <button class="btn" type="submit">Ingresar</button>
 </form>
 <button class="btn secondary" id="showRegisterBtn" type="button" style="margin-top:9px">Crear una cuenta</button>
+<button class="btn secondary" id="forgotPasswordBtn" type="button" style="margin-top:9px">Olvidé mi contraseña</button>
 </div>
 <div id="registerPanel" class="hidden">
 <form id="registerForm">
@@ -21,6 +22,16 @@
 </form>
 <button class="btn secondary" id="showLoginBtn" type="button" style="margin-top:9px">Ya tengo cuenta</button>
 <p class="muted">Te pediremos confirmar tu correo. Crear una cuenta no concede acceso a los expedientes; el personal de IPS SALUMED debe estar autorizado.</p>
+</div>
+<div id="passwordRecoveryPanel" class="hidden">
+<h2>Establecer una nueva contraseña</h2>
+<form id="passwordRecoveryForm">
+<div class="field"><label for="resetPassword">Contraseña nueva</label><input id="resetPassword" type="password" autocomplete="new-password" minlength="8" required /></div>
+<div class="field"><label for="resetPasswordConfirm">Confirmar contraseña nueva</label><input id="resetPasswordConfirm" type="password" autocomplete="new-password" minlength="8" required /></div>
+<p class="muted">Mínimo 8 caracteres. No es obligatorio incluir números, símbolos ni mayúsculas.</p>
+<button class="btn" type="submit" id="savePasswordBtn">Guardar nueva contraseña</button>
+</form>
+<button class="btn secondary" id="cancelRecoveryBtn" type="button" style="margin-top:9px">Cancelar</button>
 </div>
 <div id="loginError" class="notice hidden" role="status" aria-live="polite"></div>
 </div>
@@ -58,10 +69,47 @@ document.addEventListener('click',ev=>{const e=ev.target;if(e.dataset.page)setPa
 
 const showAuthMessage=(message)=>{const e=$('loginError');e.textContent=message;e.classList.remove('hidden')};
 const clearAuthMessage=()=>{$('loginError').textContent='';$('loginError').classList.add('hidden')};
+let passwordRecoveryActive=new URLSearchParams(location.hash.slice(1)).get('type')==='recovery';
+const showPasswordRecovery=()=>{passwordRecoveryActive=true;clearAuthMessage();$('loginView').classList.remove('hidden');$('appView').classList.add('hidden');$('signInPanel').classList.add('hidden');$('registerPanel').classList.add('hidden');$('passwordRecoveryPanel').classList.remove('hidden')};
+supabase.auth.onAuthStateChange((event)=>{if(event==='PASSWORD_RECOVERY')showPasswordRecovery()});
+$('forgotPasswordBtn').onclick=async ()=>{
+ clearAuthMessage();const email=$('email').value.trim().toLowerCase();
+ if(!email){showAuthMessage('Escribe tu correo electrónico y pulsa de nuevo para recuperar la contraseña.');return}
+ const btn=$('forgotPasswordBtn');btn.disabled=true;
+ try {
+  const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+  if(error)throw error;
+  showAuthMessage('Si el correo tiene una cuenta, recibirás un enlace para cambiar la contraseña. Revisa tu bandeja de entrada y spam. No necesitas volver a registrarte.');
+ }catch(error){showAuthMessage('No se pudo enviar la recuperación: '+(error.message||String(error)))}finally{btn.disabled=false}
+};
+$('passwordRecoveryForm').onsubmit=async (event)=>{
+ event.preventDefault();clearAuthMessage();
+ const password=$('resetPassword').value;
+ if(password.length<8){showAuthMessage('Usa al menos 8 caracteres.');return}
+ if(password!==$('resetPasswordConfirm').value){showAuthMessage('Las contraseñas no coinciden.');return}
+ const btn=$('savePasswordBtn');btn.disabled=true;
+ try{
+  const {error}=await supabase.auth.updateUser({password});
+  if(error)throw error;
+  await supabase.auth.signOut();
+  passwordRecoveryActive=false;
+  history.replaceState(null,'',location.pathname+location.search);
+  $('resetPassword').value='';$('resetPasswordConfirm').value='';
+  $('passwordRecoveryPanel').classList.add('hidden');
+  $('signInPanel').classList.remove('hidden');
+  showAuthMessage('Contraseña actualizada correctamente. Ahora ingresa con tu correo y tu nueva contraseña.');
+ }catch(error){showAuthMessage('No se pudo cambiar la contraseña: '+(error.message||String(error))+'. Si el enlace venció, solicita otro desde Olvidé mi contraseña.')}finally{btn.disabled=false}
+};
+$('cancelRecoveryBtn').onclick=async ()=>{
+ await supabase.auth.signOut();passwordRecoveryActive=false;
+ history.replaceState(null,'',location.pathname+location.search);
+ $('passwordRecoveryPanel').classList.add('hidden');$('signInPanel').classList.remove('hidden');clearAuthMessage()
+};
+
 const changeAuthMode=(create)=>{clearAuthMessage();$('signInPanel').classList.toggle('hidden',create);$('registerPanel').classList.toggle('hidden',!create);if(create){$('newEmail').value=$('email').value;setTimeout(()=>$('newPassword').focus(),0)}else{$('email').value=$('newEmail').value;setTimeout(()=>$('password').focus(),0)}};
 $('showRegisterBtn').onclick=()=>changeAuthMode(true);
 $('showLoginBtn').onclick=()=>changeAuthMode(false);
-$('loginForm').onsubmit=async e=>{e.preventDefault();clearAuthMessage();try{const {error}=await supabase.auth.signInWithPassword({email:$('email').value.trim().toLowerCase(),password:$('password').value});if(error)throw error;await initialize()}catch(err){showAuthMessage('No fue posible ingresar: '+(err.message||String(err)))}};
+$('loginForm').onsubmit=async e=>{e.preventDefault();clearAuthMessage();try{const {error}=await supabase.auth.signInWithPassword({email:$('email').value.trim().toLowerCase(),password:$('password').value});if(error)throw error;await initialize()}catch(err){const message=err.message||String(err);showAuthMessage('No fue posible ingresar: '+message+'. Si olvidaste la contraseña, usa el botón Olvidé mi contraseña.')}};
 $('registerForm').onsubmit=async e=>{
  e.preventDefault();clearAuthMessage();
  const email=$('newEmail').value.trim().toLowerCase();
@@ -83,6 +131,6 @@ $('registerForm').onsubmit=async e=>{
  } finally {btn.disabled=false}
 };
 $('logout').onclick=async()=>{await supabase.auth.signOut();location.reload()};
-async function initialize(){const {data:{user}}=await supabase.auth.getUser();if(!user)return;try{const data=await api(supabase.from('staff').select('*').eq('user_id',user.id).eq('active',true).single());staff=data;$('staffLabel').textContent=data.display_name||user.email;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');await load()}catch(e){$('loginError').textContent='Cuenta sin acceso a IPS SALUMED. El administrador debe habilitarla en la tabla staff.';$('loginError').classList.remove('hidden');await supabase.auth.signOut()}}
+async function initialize(){if(passwordRecoveryActive){showPasswordRecovery();return}const {data:{user}}=await supabase.auth.getUser();if(!user)return;try{const data=await api(supabase.from('staff').select('*').eq('user_id',user.id).eq('active',true).single());staff=data;$('staffLabel').textContent=data.display_name||user.email;$('loginView').classList.add('hidden');$('appView').classList.remove('hidden');await load()}catch(e){$('loginError').textContent='Cuenta sin acceso a IPS SALUMED. El administrador debe habilitarla en la tabla staff.';$('loginError').classList.remove('hidden');await supabase.auth.signOut()}}
 $('todayLabel').textContent=new Intl.DateTimeFormat('es-CO',{dateStyle:'long',timeZone:'America/Bogota'}).format(new Date());initialize();
 </script></body></html>
