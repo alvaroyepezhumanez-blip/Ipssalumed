@@ -13,7 +13,7 @@ Aplicación para gestionar pacientes, citas odontológicas y recordatorios, aloj
 
 ## Registro desde la página
 
-En la página principal, selecciona **Crear una cuenta**, escribe cualquier correo que controles, crea una contraseña de al menos 12 caracteres con mayúsculas, minúsculas y números, repítela y pulsa **Registrarme**. El formulario utiliza `supabase.auth.signUp` y no concede privilegios clínicos automáticamente.
+En la página principal, selecciona **Crear una cuenta**, escribe cualquier correo que controles, crea una contraseña de al menos 8 caracteres, sin requisitos de mayúsculas, números ni caracteres especiales, repítela y pulsa **Registrarme**. El formulario utiliza `supabase.auth.signUp` y no concede privilegios clínicos automáticamente.
 
 **Verificación de correo:** Supabase puede exigir un mensaje de confirmación. Antes de operar en producción, configura [SMTP personalizado](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/smtp) y registra la dirección de Cloudflare Pages en [Auth URL Configuration](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/url-configuration). El SMTP predeterminado de Supabase puede rechazar correos de personas que no pertenecen al equipo del proyecto. Por ello, publicar el formulario **no garantiza** que ya lleguen los emails ni que el registro se complete sin configurar el correo.
 
