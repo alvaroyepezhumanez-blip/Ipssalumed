@@ -11,20 +11,13 @@ Aplicación para gestionar pacientes, citas odontológicas y recordatorios, aloj
 - El correo **promocionymantenimiento@ipssalumed.com** está preautorizado en la lista privada de la base de datos para recibir rol **admin** tras confirmar el correo en Supabase Auth.
 - **La cuenta aún no se ha creado ni activado** hasta que el titular defina su propia contraseña y confirme el email. No se ha generado ni enviado una invitación desde la integración.
 
-## Activar el primer administrador
+## Registro desde la página
 
-1. Abre el sitio de Cloudflare Pages conectado a este repositorio (rama `main`).
-2. En el formulario, deja el correo `promocionymantenimiento@ipssalumed.com`.
-3. Escribe una **contraseña nueva y privada**, de al menos 12 caracteres con mayúsculas, minúsculas y números.
-4. Selecciona **Activar cuenta por primera vez**.
-5. Revisa el buzón institucional, confirma mediante el enlace recibido y vuelve a iniciar sesión.
-6. Una función de base de datos añade a `public.staff` el usuario verificado preautorizado con rol `admin`. Si el correo ya existía y está verificado, el administrador puede validar la fila en la tabla `staff`.
+En la página principal, selecciona **Crear una cuenta**, escribe cualquier correo que controles, crea una contraseña de al menos 12 caracteres con mayúsculas, minúsculas y números, repítela y pulsa **Registrarme**. El formulario utiliza `supabase.auth.signUp` y no concede privilegios clínicos automáticamente.
 
-### Configurar redirección de verificación
+**Verificación de correo:** Supabase puede exigir un mensaje de confirmación. Antes de operar en producción, configura [SMTP personalizado](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/smtp) y registra la dirección de Cloudflare Pages en [Auth URL Configuration](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/url-configuration). El SMTP predeterminado de Supabase puede rechazar correos de personas que no pertenecen al equipo del proyecto. Por ello, publicar el formulario **no garantiza** que ya lleguen los emails ni que el registro se complete sin configurar el correo.
 
-**Antes del paso 4**, en [Supabase Auth URL Configuration](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/url-configuration), configura la URL real asignada por Cloudflare Pages como **Site URL** y agrégala a **Redirect URLs**. Por ejemplo, `https://TU-PROYECTO.pages.dev/**` (reemplaza por la dirección real; no uses este ejemplo como URL). En [Auth Providers](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/providers) asegúrate de tener activada **Confirm email**. Nunca desactives la confirmación del correo para usuarios con acceso a datos de pacientes.
-
-Para cuentas futuras, la aprobación de correos se gestiona mediante `private.staff_email_allowlist`; no concedas acceso mediante credenciales compartidas.
+Una cuenta nueva puede autenticarse después de verificar el correo, pero **no puede acceder a pacientes o citas** hasta ser autorizada en `public.staff`. El correo `promocionymantenimiento@ipssalumed.com` ya está preautorizado para obtener rol `admin` **solo después de verificar su identidad por correo**. Los demás correos necesitan aprobación individual por un administrador, sin dar acceso por defecto.
 
 ## Publicar con Cloudflare Pages desde GitHub
 
