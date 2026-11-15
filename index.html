@@ -10,7 +10,7 @@
 </main></div><div class="overlay hidden" id="overlay"><div class="dialog"><div class="dialogheader"><h2 id="modalTitle">Registro</h2><button class="close" id="closeModal" aria-label="Cerrar">×</button></div><div id="modalBody"></div></div></div><div class="toast hidden" id="toast"></div>
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.0/+esm';
-const supabase=createClient('https://kncjxucxenjvrjjtunfk.supabase.co','PON_AQUI_TU_CLAVE_PUBLICABLE');
+const supabase=createClient('https://kncjxucxenjvrjjtunfk.supabase.co','sb_publishable_rZYVWeXTMcQUzpXC9BF1qQ_8UoIZxG4');
 const $=id=>document.getElementById(id);let patients=[],appointments=[],reminders=[],staff=null,editingAppt=null;
 const escapeHTML=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const dateFmt=v=>new Intl.DateTimeFormat('es-CO',{timeZone:'America/Bogota',year:'numeric',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit',hour12:true}).format(new Date(v));
