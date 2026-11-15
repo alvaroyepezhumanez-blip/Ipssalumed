@@ -16,6 +16,17 @@ La URL del proyecto Supabase está configurada en `index.html`, pero la clave p�
 
 Cloudflare desplegará automáticamente nuevos commits a `main`.
 
+## Modo de demostración (solo datos ficticios)
+
+La pantalla principal ofrece una prueba con:
+
+- **Usuario:** `admin`
+- **Contraseña:** `admin`
+
+Al ingresar estas credenciales se abre `/demo.html`, una aplicación completamente aislada, sin conexión con Supabase y sin envío de WhatsApp. Permite crear, editar, buscar y cancelar citas y pacientes de ejemplo, así como ver el estado simulado de recordatorios. Los cambios solo se almacenan en la sesión de la pestaña del navegador; no se deben introducir datos de pacientes reales.
+
+**Estos valores NO son credenciales administrativas de Supabase**, y nunca conceden acceso a datos institucionales. Para operar con pacientes reales, crear usuarios en Supabase Auth con contraseñas robustas y autorizar explícitamente su UID en `public.staff`.
+
 ## Habilitar acceso de personal
 
 En Supabase Dashboard > Authentication > Users crea o invita al primer usuario. Luego ejecuta desde SQL Editor, reemplazando el UUID por el identificador real:
