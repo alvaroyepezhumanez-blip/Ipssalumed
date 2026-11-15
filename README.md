@@ -19,6 +19,18 @@ En la página principal, selecciona **Crear una cuenta**, escribe cualquier corr
 
 Una cuenta nueva puede autenticarse después de verificar el correo, pero **no puede acceder a pacientes o citas** hasta ser autorizada en `public.staff`. El correo `promocionymantenimiento@ipssalumed.com` ya está preautorizado para obtener rol `admin` **solo después de verificar su identidad por correo**. Los demás correos necesitan aprobación individual por un administrador, sin dar acceso por defecto.
 
+## Recuperación de contraseña y activación
+
+El correo `promocionymantenimiento@ipssalumed.com` **ya está confirmado en Supabase Auth** y recibió el rol `admin` en `public.staff`. Si no puede ingresar con la contraseña original, no repitas el registro: usa **Olvidé mi contraseña** desde el formulario.
+
+1. Escribe el correo de la cuenta en **Ingresar**.
+2. Pulsa **Olvidé mi contraseña**.
+3. Abre el mensaje más reciente y usa el enlace **una sola vez**. Los enlaces anteriores pueden caducar.
+4. Al regresar a la aplicación, escribe y confirma una nueva contraseña de al menos 8 caracteres.
+5. Guarda e inicia sesión con la nueva contraseña.
+
+Para que el enlace regrese correctamente a Cloudflare, configura el dominio real en [Supabase Auth URL Configuration](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/url-configuration), como **Site URL** y **Redirect URLs**. Si los correos no salen, configura [SMTP personalizado](https://supabase.com/dashboard/project/kncjxucxenjvrjjtunfk/auth/smtp). No desactives confirmación de correo para usuarios con acceso a datos clínicos.
+
 ## Publicar con Cloudflare Pages desde GitHub
 
 1. En Cloudflare Dashboard > Workers & Pages > Pages conecta GitHub con el repositorio `alvaroyepezhumanez-blip/Ipssalumed`.
