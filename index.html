@@ -14,9 +14,9 @@
 <div id="registerPanel" class="hidden">
 <form id="registerForm">
 <div class="field"><label for="newEmail">Correo electrónico</label><input id="newEmail" type="email" autocomplete="email" value="promocionymantenimiento@ipssalumed.com" required/></div>
-<div class="field"><label for="newPassword">Crear contraseña</label><input id="newPassword" type="password" autocomplete="new-password" minlength="12" required/></div>
-<div class="field"><label for="confirmPassword">Confirmar contraseña</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="12" required/></div>
-<p class="muted">Usa al menos 12 caracteres, con mayúsculas, minúsculas y números.</p>
+<div class="field"><label for="newPassword">Crear contraseña</label><input id="newPassword" type="password" autocomplete="new-password" minlength="8" required/></div>
+<div class="field"><label for="confirmPassword">Confirmar contraseña</label><input id="confirmPassword" type="password" autocomplete="new-password" minlength="8" required/></div>
+<p class="muted">La contraseña solo necesita 8 caracteres o más. No exigimos mayúsculas, números ni símbolos.</p>
 <button class="btn" id="createAccountBtn" type="submit">Registrarme</button>
 </form>
 <button class="btn secondary" id="showLoginBtn" type="button" style="margin-top:9px">Ya tengo cuenta</button>
@@ -68,7 +68,7 @@ $('registerForm').onsubmit=async e=>{
  const password=$('newPassword').value;
  if(!email){showAuthMessage('Escribe tu correo electrónico.');return}
  if(password!==$('confirmPassword').value){showAuthMessage('Las contraseñas no coinciden.');return}
- if(password.length<12||!/[a-z]/.test(password)||!/[A-Z]/.test(password)||!/[0-9]/.test(password)){showAuthMessage('La contraseña debe tener mínimo 12 caracteres con mayúsculas, minúsculas y números.');return}
+ if(password.length<8){showAuthMessage('La contraseña debe tener al menos 8 caracteres.');return}
  const btn=$('createAccountBtn');btn.disabled=true;
  try {
   const {data,error}=await supabase.auth.signUp({email,password,options:{emailRedirectTo:location.origin+location.pathname}});
